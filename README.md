@@ -92,3 +92,41 @@ docker compose up -d --build
 - **Empty dashboard table after simulating an event**: Confirm both `case-management` and `inference-engine` point to the exact same `SQLITE_DB_PATH` (`./data:/app/data` in Docker Compose), check `http://localhost:8001/api/v1/cases?min_risk_score=0`, and click **Sync Feed** or set the filter to **ALL**.
 - **Build errors on `COPY requirements.txt .`**: Ensure each service has its own `requirements.txt` inside its service directory and that `docker-compose.yml` sets `context:` to that service folder.
 - **Separate frontend & backend hosting**: Update `VITE_INGEST_API_URL` and `VITE_CASE_API_URL` to your backend URLs and allow your frontend origin in FastAPI `CORSMiddleware`.
+
+## Architecture 
+                      +-----------------------------------+
+                      |    React / Vite Frontend (UI)     |
+                      |       Served via Nginx (:80)      |
+                      +-----------------+-----------------+
+                                        |
+              +-------------------------+-------------------------+
+              | HTTP / REST                                       | HTTP / REST
+              v                                                   v
++-----------------------------+                     +-----------------------------+
+|      Ingestion Service      |                     |   Case Management Service   |
+|       FastAPI (:8000)       |                     |       FastAPI (:8001)       |
++--------------+--------------+                     +--------------+--------------+
+               |                                                   ^
+               | XADD / Velocity ZSET                              | Read / Update Cases
+               v                                                   v
++-------------------------------------------------------------------+
+|                           Redis (:6379)                           |
+|  - Stream: fraud-events-stream                                    |
+|  - Consumer Group: inference-processing-group                     |
+|  - Feature Store: user:<user_id>:recent_events (Sorted Set)       |
++---------------------------------+---------------------------------+
+                                  |
+                                  | XREADGROUP / ZCARD / XACK
+                                  v
+                 +---------------------------------+
+                 |     Inference Engine Worker     |
+                 |      Python (worker.py)         |
+                 +----------------+----------------+
+                                  |
+                                  | Write High-Risk Cases (score >= 50)
+                                  v
+                 +---------------------------------+
+                 |     SQLite (fraud_cases.db)     |
+                 |   Table: fraud_cases            |
+                 |   Mounted Volume: ./data        |
+                 +---------------------------------+
