@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fraud-investigation-platform"
+version = "1.0.0"
+description = "Microservice-based Digital Fraud Investigation Platform (Redis & SQLite)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi==0.110.0",
+    "uvicorn==0.28.0",
+    "pydantic==2.6.4",
+    "redis==5.0.1",
+    "sqlalchemy==2.0.28",
+    "scikit-learn==1.4.1.post1",
+    "pandas==2.2.1",
+    "xgboost==2.0.3",
+]
+
+[tool.setuptools.packages.find]
+# Automatically discovers shared modules and all microservice directories
+include = ["shared*", "services*"]

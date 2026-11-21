@@ -1,0 +1,29 @@
+# Version Control
+.git
+.gitignore
+
+# Python Virtual Environments & Cache
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDEs & Operating System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local Development Data & Databases (keeps local state out of Docker images)
+data/
+*.db
+*.sqlite3
+*.log
+
+# Docker Meta Files
+docker-compose.yml
+.dockerignore
